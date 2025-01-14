@@ -1,90 +1,69 @@
-from django.db import DatabaseError
-from django.db.models import Sum
-from django.http import HttpResponseServerError
-from django.shortcuts import get_object_or_404, redirect, render
+from django.http import Http404
 
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import TemplateView, DetailView, ListView
 
-# from .models import
+from .models import Products
+from .utils import q_search
 
 
-def index(request):
-    context = {
-        "title": "FFF",
-        "products": [
-            {
-                "image": "deps/images/goods/set of tea table and three chairs.jpg",
-                "name": "Чайный столик и три стула",
-                "description": "Комплект из трёх стульев и дизайнерский столик для гостинной комнаты.",
-                "price": 150.00,
-            },
-            {
-                "image": "deps/images/goods/set of tea table and two chairs.jpg",
-                "name": "Чайный столик и два стула",
-                "description": "Набор из стола и двух стульев в минималистическом стиле.",
-                "price": 93.00,
-            },
-            {
-                "image": "deps/images/goods/double bed.jpg",
-                "name": "Двухспальная кровать",
-                "description": "Кровать двухспальная с надголовником и вообще очень ортопедичная.",
-                "price": 670.00,
-            },
-            {
-                "image": "deps/images/goods/kitchen table.jpg",
-                "name": "Кухонный стол с раковиной",
-                "description": "Кухонный стол для обеда с встроенной раковиной и стульями.",
-                "price": 365.00,
-            },
-            {
-                "image": "deps/images/goods/kitchen table 2.jpg",
-                "name": "Кухонный стол с встройкой",
-                "description": "Кухонный стол со встроенной плитой и раковиной. Много полок и вообще красивый.",
-                "price": 430.00,
-            },
-            {
-                "image": "deps/images/goods/corner sofa.jpg",
-                "name": "Угловой диван для гостинной",
-                "description": "Угловой диван, раскладывается в двухспальную кровать, для гостинной и приема гостей самое то!",
-                "price": 610.00,
-            },
-            {
-                "image": "deps/images/goods/bedside table.jpg",
-                "name": "Прикроватный столик",
-                "description": "Прикроватный столик с двумя выдвижными ящиками (цветок не входит в комплект).",
-                "price": 55.00,
-            },
-            {
-                "image": "deps/images/goods/sofa.jpg",
-                "name": "Диван обыкновенный",
-                "description": "Диван, он же софа обыкновенная, ничего примечательного для описания.",
-                "price": 190.00,
-            },
-            {
-                "image": "deps/images/goods/office chair.jpg",
-                "name": "Стул офисный",
-                "description": "Описание товара, про то какой он классный, но это стул, что тут сказать...",
-                "price": 30.00,
-            },
-            {
-                "image": "deps/images/goods/plants.jpg",
-                "name": "Растение",
-                "description": "Растение для украшения вашего интерьера подарит свежесть и безмятежность обстановке.",
-                "price": 10.00,
-            },
-            {
-                "image": "deps/images/goods/flower.jpg",
-                "name": "Цветок стилизированный",
-                "description": "Дизайнерский цветок (возможно искусственный) для украшения интерьера.",
-                "price": 15.00,
-            },
-            {
-                "image": "deps/images/goods/strange table.jpg",
-                "name": "Прикроватный столик",
-                "description": "Столик, довольно странный на вид, но подходит для размещения рядом с кроватью.",
-                "price": 25.00,
-            },
-        ],
-    }
-    return render(request, "index.html", context)
+class IndexView(TemplateView):
+    template_name = "index-1.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Главная"
+        context["content"] = "Сервис онлайн-закупок"
+        return context
+
+
+class CatalogView(ListView):
+    model = Products
+    # queryset = Products.objects.all().order_by("-id")
+    template_name = "index.html"
+    context_object_name = "products"
+    allow_empty = True
+    # чтоб удобно передать в методы
+    slug_url_kwarg = "category_slug"
+
+    def get_queryset(self):
+        category_slug = self.kwargs.get(self.slug_url_kwarg)
+        order_by = self.request.GET.get("order_by")
+        query = self.request.GET.get("q")
+
+        if category_slug == "all":
+            products = super().get_queryset()
+        elif query:
+            products = q_search(query)
+        else:
+            products = super().get_queryset().filter(category__slug=category_slug)
+            if not products.exists():
+                raise Http404()
+
+        if order_by and order_by != "default":
+            products = products.order_by(order_by)
+
+        return products
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Каталог"
+        context["slug_url"] = self.kwargs.get(self.slug_url_kwarg)
+        return context
+
+
+class ProductView(DetailView):
+
+    # model = Products
+    # slug_field = "slug"
+    template_name = "products/product.html"
+    slug_url_kwarg = "product_slug"
+    context_object_name = "product"
+
+    def get_object(self, queryset=None):
+        product = Products.objects.get(slug=self.kwargs.get(self.slug_url_kwarg))
+        return product
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = self.object.name
+        return context
