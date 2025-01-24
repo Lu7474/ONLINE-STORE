@@ -55,7 +55,7 @@
           {% endif %}
           <div class="card-body">
             <a href="{% url 'product' product.slug %}">
-              
+
               <p class="card-title">
                 {% autoescape off %}
                   {% if product.headline %}
@@ -84,7 +84,6 @@
               {% comment %} <a href="{% url 'cart_add' %}" class="btn add-to-cart" data-product-id="{{ product.id }}">
                 {% endcomment %}
                 {% csrf_token %}
-                {% comment %} <img class="mx-1" src="{% static 'deps/icons/cart-plus.svg' %}" alt="Catalog Icon" width="32" height="32" /> {% endcomment %}
                 <button type="button" class="btn btn-outline-dark">Заказать</button>
               </a>
             </div>

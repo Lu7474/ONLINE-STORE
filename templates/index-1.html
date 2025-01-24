@@ -1,9 +1,22 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% load products_tags %}
 
 {% block title %}
-{{ title }}
+  {{ title }}
 {% endblock %}
 
 {% block content %}
-<h1 class="mt-5 pt-5"><strong>{{ content }}</strong></h1>
+  <h1 class="mt-5 pt-5"><strong>{{ content }}</strong></h1>
+
+  <div class="categories mt-4">
+    <h2>Категории</h2>
+    <ul>
+      {% tag_categories as categories %}
+      {% for category in categories %}
+        <li>
+          <a href="{% url 'index' category.slug %}">{{ category.name }}</a>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
 {% endblock %}
