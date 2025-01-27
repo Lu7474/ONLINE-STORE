@@ -10,8 +10,8 @@ urlpatterns = [
     path("users/", include("users.urls")),
     path("users/", include("django.contrib.auth.urls")),
     path("", include("dashboard.urls")),
-    path("cart/", include("carts.urls", namespace="cart")),
-    path("orders/", include("orders.urls", namespace="orders")),
+    path("cart/", include("carts.urls")),
+    path("orders/", include("orders.urls")),
 ]
 
 if settings.DEBUG:

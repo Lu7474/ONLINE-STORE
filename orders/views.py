@@ -40,7 +40,7 @@ class CreateOrderView(LoginRequiredMixin, FormView):
                     for cart_item in cart_items:
                         product = cart_item.product
                         name = cart_item.product.name
-                        price = cart_item.product.sell_price()
+                        price = cart_item.product.price
                         quantity = cart_item.quantity
 
                         if product.quantity < quantity:

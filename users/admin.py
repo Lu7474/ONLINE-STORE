@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import User
 from carts.admin import CartTabAdmin
-# from orders.admin import OrderTabulareAdmin
+from orders.admin import OrderTabulareAdmin
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
@@ -14,5 +14,4 @@ class UserAdmin(admin.ModelAdmin):
         "email",
     ]
 
-    inlines = [CartTabAdmin]
-    # inlines = [CartTabAdmin, OrderTabulareAdmin]
+    inlines = [CartTabAdmin, OrderTabulareAdmin]

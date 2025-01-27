@@ -1,0 +1,51 @@
+<div class="card mb-3 text-bg-light shadow-lg">
+  {% for cart in carts %}
+    <div class="card-header">
+      <h5 class="card-title">{{ cart.product.name }}</h5>
+    </div>
+    <ul class="list-group list-group-flush">
+      <li class="list-group-item">
+        <div class="row text-center">
+          <div class="col p-0">
+            <div class="input-group">
+              <form method="post" action="{% url 'cart_change' %}" style="display: inline;">
+                {% csrf_token %}
+                <input type="hidden" name="cart_id" value="{{ cart.id }}">
+                <input type="hidden" name="quantity" value="{{ cart.quantity|add:'-1' }}">
+                <button type="submit" class="btn btn-dark btn-sm">-</button>
+              </form>
+              <input type="text" class="form-control number" value="{{ cart.quantity }}" readonly />
+              <form method="post" action="{% url 'cart_change' %}" style="display: inline;">
+                {% csrf_token %}
+                <input type="hidden" name="cart_id" value="{{ cart.id }}">
+                <input type="hidden" name="quantity" value="{{ cart.quantity|add:'1' }}">
+                <button type="submit" class="btn btn-dark btn-sm">+</button>
+              </form>
+            </div>
+          </div>
+          <div class="col p-0">
+            <strong>{{ cart.products_price }} $</strong>
+          </div>
+          <div class="col p-0">
+            <form method="post" action="{% url 'cart_remove' %}" style="display: inline;">
+              {% csrf_token %}
+              <input type="hidden" name="cart_id" value="{{ cart.id }}">
+              <button type="submit" class="btn btn-link text-danger">Del</button>
+            </form>
+          </div>
+        </div>
+      </li>
+    </ul>
+  {% endfor %}
+</div>
+<div class="card mb-3 shadow-lg">
+  <div class="card-footer">
+    <p class="float-left">
+      Итого <strong>{{ carts.total_quantity }}</strong> товар(а) на сумму
+    </p>
+    <h4 class="float-left"><strong>{{ carts.total_price }} $</strong></h4>
+  </div>
+</div>
+{% if carts and not order %}
+  <a class="btn btn-dark" href="{% url 'create_order' %}">Оформить заказ</a>
+{% endif %}

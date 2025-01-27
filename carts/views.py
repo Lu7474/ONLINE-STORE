@@ -1,16 +1,19 @@
-from django.http import JsonResponse
-from django.template.loader import render_to_string
+from django.contrib import messages
+from django.shortcuts import redirect
 from django.views import View
 from .mixins import CartMixin
 from .models import Cart
-
 from dashboard.models import Products
 
 
 class CartAddView(CartMixin, View):
     def post(self, request):
         product_id = request.POST.get("product_id")
-        product = Products.objects.get(id=product_id)
+        try:
+            product = Products.objects.get(id=product_id)
+        except Products.DoesNotExist:
+            messages.error(request, "Товар не найден")
+            return redirect(request.META.get("HTTP_REFERER", "home"))
 
         cart = self.get_cart(request, product=product)
 
@@ -18,32 +21,30 @@ class CartAddView(CartMixin, View):
             cart.quantity += 1
             cart.save()
 
-        response_data = {
-            "message": "Товар добавлен в корзину",
-            "cart_items_html": self.render_cart(request),
-        }
-
-        return JsonResponse(response_data)
+        else:
+            cart = Cart.objects.create(
+                user=request.user if request.user.is_authenticated else None,
+                product=product,
+                quantity=1,
+            )
+        messages.success(request, "Товар добавлен в корзину")
+        return redirect(request.META.get("HTTP_REFERER", "home"))
 
 
 class CartChangeView(CartMixin, View):
     def post(self, request):
         cart_id = request.POST.get("cart_id")
-
+        quantity = int(request.POST.get("quantity"))
         cart = self.get_cart(request, cart_id=cart_id)
 
-        cart.quantity = request.POST.get("quantity")
-        cart.save()
+        if cart:
+            if quantity > 0:
+                cart.quantity = quantity
+                cart.save()
+            else:
+                cart.delete()
 
-        quantity = cart.quantity
-
-        response_data = {
-            "message": "Количество изменено",
-            "quantity": quantity,
-            "cart_items_html": self.render_cart(request),
-        }
-
-        return JsonResponse(response_data)
+        return redirect(request.META.get("HTTP_REFERER", "cart"))
 
 
 class CartRemoveView(CartMixin, View):
@@ -51,13 +52,7 @@ class CartRemoveView(CartMixin, View):
         cart_id = request.POST.get("cart_id")
 
         cart = self.get_cart(request, cart_id=cart_id)
-        quantity = cart.quantity
-        cart.delete()
+        if cart:
+            cart.delete()
 
-        response_data = {
-            "message": "Товар удален из корзины",
-            "quantity_deleted": quantity,
-            "cart_items_html": self.render_cart(request),
-        }
-
-        return JsonResponse(response_data)
+        return redirect(request.META.get("HTTP_REFERER", "cart"))

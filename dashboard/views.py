@@ -50,7 +50,7 @@ class CatalogView(ListView):
 
 
 class ProductView(DetailView):
-    template_name = "products/product.html"
+    template_name = "product.html"
     slug_url_kwarg = "product_slug"
     context_object_name = "product"
 

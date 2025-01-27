@@ -1,9 +1,7 @@
-
-
 from django.template.loader import render_to_string
 from django.urls import reverse
-from carts.models import Cart
-from carts.utils import get_user_carts
+from .models import Cart
+from .utils import get_user_carts
 
 
 class CartMixin:
@@ -18,15 +16,13 @@ class CartMixin:
             query_kwargs["id"] = cart_id
 
         return Cart.objects.filter(**query_kwargs).first()
-    
+
     def render_cart(self, request):
         user_cart = get_user_carts(request)
         context = {"carts": user_cart}
 
         referer = request.META.get('HTTP_REFERER')
-        if reverse('orders:create_order') in referer:
+        if reverse('create_order') in referer:
             context["order"] = True
 
-        return render_to_string(
-            "carts/includes/included_cart.html", context, request=request
-        )
+        return render_to_string("included_cart.html", context, request=request)
